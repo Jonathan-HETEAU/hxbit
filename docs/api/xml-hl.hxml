@@ -1,0 +1,6 @@
+-cp .
+--macro include('hxbit',true,['hxbit.Macros'])
+-D doc-gen
+--no-output
+-hl hxbit.hl
+-xml docs/api/hxbit_hl.xml

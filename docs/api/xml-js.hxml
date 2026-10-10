@@ -1,0 +1,6 @@
+-cp .
+--macro include('hxbit',true,['hxbit.Macros','hxbit.Dump'])
+-D doc-gen
+--no-output
+-js hxbit.js
+-xml docs/api/hxbit_js.xml
