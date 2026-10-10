@@ -23,14 +23,26 @@ package hxbit;
 
 import hxbit.NetworkSerializable;
 
+/**
+	The data of a `VectorProxy`: the wrapped vector, and the property of the host it is bound to.
+**/
 @:generic
 class VectorProxyData<T> extends BaseProxy {
+	/**
+		The wrapped vector.
+	**/
 	public var array : haxe.ds.Vector<T>;
+	/**
+		Wraps the vector.
+	**/
 	public function new(v) {
 		array = v;
 	}
 }
 
+/**
+	The proxy of a `haxe.ds.Vector` stored in a property of a `NetworkSerializable`: setting a value or sorting marks the property as changed, which sends the whole vector again. Vectors are converted to proxies implicitly.
+**/
 abstract VectorProxy<T>(VectorProxyData<T>) {
 
 	@:noCompletion public var __value(get, never) : haxe.ds.Vector<T>;
@@ -42,23 +54,38 @@ abstract VectorProxy<T>(VectorProxyData<T>) {
 		this = a;
 	}
 	
+	/**
+		Returns the wrapped vector: changes made to it directly don't mark the property as changed.
+	**/
 	public inline function getVector() {
 		return __value;
 	}
 
+	/**
+		Returns a proxy of a copy of the value, not bound to a host.
+	**/
 	public inline function copy() {
 		return new VectorProxy(new VectorProxyData(this.array.copy()));
 	}
 
+	/**
+		Returns the string representations of the values separated by `s`.
+	**/
 	public inline function join( s : String ) {
 		return this.array.join(s);
 	}
 
+	/**
+		Sorts the values with the comparison function, and marks the property as changed.
+	**/
 	public inline function sort(cmp:T->T->Int) {
 		this.array.sort(cmp);
 		this.mark();
 	}
 
+	/**
+		Returns the string representation of the value.
+	**/
 	public inline function toString() {
 		return Std.string(this.array);
 	}

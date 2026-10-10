@@ -27,75 +27,183 @@ import haxe.macro.Context;
 using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
 
+/**
+	The modes of the `@:rpc(mode)` methods of a `NetworkSerializable`.
+**/
 enum RpcMode {
-	/*
+	/**
 		When called on the client: will forward the call on the server (if networkAllows(RPC) allows it), but not execute locally.
 		When called on the server: will forward the call to the clients (and force its execution), then execute.
 		This is the default behavior.
-	*/
+	**/
 	All;
-	/*
+	/**
 		When called on the server: will forward the call to the clients, but not execute locally.
 		When called on the client: will execute locally.
-	*/
+	**/
 	Clients;
-	/*
+	/**
 		When called on the client: will forward the call the server (if networkAllow(RPCServer) allows it), but not execute locally.
 		When called on the server: will execute locally.
-	*/
+	**/
 	Server;
-	/*
+	/**
 		When called on the client: will forward the call to the server (if networkAllow(RPC) allows it), but not execute locally.
 		When called on the server: will forward the call to the owners as defined by networkAllow(Ownership).
-	*/
+	**/
 	Owner;
-	/*
+	/**
 		When called on the client: will forward the call to the server and other clients (if networkAllows(RPC) allows it) and execute locally immediately.
 		When called on the server: will forward the call to the clients (and force its execution), then execute.
-	*/
+	**/
 	Immediate;
-	/*
+	/**
 		Variant of @:rpc(server) that also generates check{Name} and can{Name} functions that skip execution of code within @:do { } blocks.
-	*/
+	**/
 	Checked;
 }
 
+/**
+	The type of a serialized value, as used by the macros and stored in the schemas (see `Schema.FieldType`).
+**/
 enum PropTypeDesc<PropType> {
+	/**
+		An `Int`.
+	**/
 	PInt;
+	/**
+		A `Float`, stored with 32 bits precision.
+	**/
 	PFloat;
+	/**
+		A `Bool`.
+	**/
 	PBool;
+	/**
+		A `String`.
+	**/
 	PString;
+	/**
+		An `haxe.io.Bytes`.
+	**/
 	PBytes;
+	/**
+		A `Serializable` object of the given class.
+	**/
 	PSerializable( name : String );
+	/**
+		An enum value of the given enum.
+	**/
 	PEnum( name : String );
+	/**
+		A `Map`.
+	**/
 	PMap( k : PropType, v : PropType );
+	/**
+		An `Array`.
+	**/
 	PArray( k : PropType );
+	/**
+		An anonymous structure.
+	**/
 	PObj( fields : Array<{ name : String, type : PropType, opt : Bool }> );
+	/**
+		An abstract, stored as its underlying type.
+	**/
 	PAlias( k : PropType );
+	/**
+		An `haxe.ds.Vector`.
+	**/
 	PVector( k : PropType );
+	/**
+		A nullable value.
+	**/
 	PNull( t : PropType );
+	/**
+		An unknown type.
+	**/
 	PUnknown;
+	/**
+		A `Dynamic` value (see `Serializer.addDynamic`).
+	**/
 	PDynamic;
+	/**
+		An `haxe.Int64`.
+	**/
 	PInt64;
+	/**
+		`haxe.EnumFlags`, stored as an integer.
+	**/
 	PFlags( t : PropType );
+	/**
+		A `CustomSerializable` value.
+	**/
 	PCustom;
+	/**
+		A `Serializable` object implementing the given interface.
+	**/
 	PSerInterface( name : String );
+	/**
+		A `StructSerializable` value, as stored in older data with its fields.
+	**/
 	POldStruct( name : String, fields : Array<{ name : String, type : PropType }> );
+	/**
+		A CastleDB type (abstract with `@:cdb`), stored as its underlying type.
+	**/
 	PAliasCDB( k : PropType );
+	/**
+		A `@:noSave` value: not saved, only sent over the network.
+	**/
 	PNoSave( k : PropType );
+	/**
+		A `StructSerializable` value of the given class.
+	**/
 	PStruct( name : String );
+	/**
+		A `Double`, stored with 64 bits precision.
+	**/
 	PDouble;
+	/**
+		A RPC, with its mode, arguments and return type.
+	**/
 	PRPC( mode : RpcMode, args : Array<PropType>, ret : PropType );
 }
 
+/**
+	A serialized type, with the options given by the field metadata.
+**/
 typedef PropType = {
+	/**
+		The type.
+	**/
 	var d : PropTypeDesc<PropType>;
+	/**
+		The Haxe type.
+	**/
 	var t : ComplexType;
+	/**
+		Tells if the value is wrapped in a proxy to track its changes.
+	**/
 	var ?isProxy : Bool;
+	/**
+		The `@:increment` value.
+	**/
 	var ?increment : Float;
+	/**
+		The `@:condSend` condition.
+	**/
 	var ?condSend : Expr;
+	/**
+		Set by `@:notMutable` (or `@:condSend(false)`, `@:noSync`): no proxy is used.
+	**/
 	var ?notMutable : Bool;
+	/**
+		Set by `@:noSync`: the value is not synchronized over the network.
+	**/
 	var ?noSync : Bool;
+	/**
+		The `@:visible` visibility group.
+	**/
 	var ?visibility : Int;
 }
 
@@ -105,10 +213,19 @@ private enum Condition {
 	IsParam;
 }
 
+/**
+	The macros generating the serialization and network code of `Serializable`, `StructSerializable` and `NetworkSerializable` classes, and helpers called by the generated code.
+**/
 class Macros {
 
 	static var PREFIX_VARS : Map<String,Bool> = null;
+	/**
+		Metadata names (without `:`) allowed on serialized fields: other unknown metadata cause an error.
+	**/
 	public static var IGNORED_META : Map<String,Bool> = new Map();
+	/**
+		The names of the visibility groups (set with `initVisibility`).
+	**/
 	public static var VISIBILITY_VALUES = [];
 
 	/** Generate game-specific property getters, mostly to be used in networkAllow() **/
@@ -131,16 +248,25 @@ class Macros {
 
 	#end
 
+	/**
+		Sets the names of the visibility groups, used by `@:visible(group)` with `-D hxbit_visibility`. Call it from an initialization macro: `--macro hxbit.Macros.initVisibility(["team","owner"])`.
+	**/
 	public static function initVisibility(vis) {
 		VISIBILITY_VALUES = vis;
 	}
 
+	/**
+		Returns the path of the serializer class generated for an enum (in the `hxbit.enumSer` package).
+	**/
 	public static function makeEnumPath( name : String ) {
 		name = name.split(".").join("_");
 		name = name.charAt(0).toUpperCase() + name.substr(1);
 		return "hxbit.enumSer." + name;
 	}
 
+	/**
+		Writes the value `v` with the serializer `ctx`, with code generated for its type.
+	**/
 	public static macro function serializeValue( ctx : Expr, v : Expr ) : Expr {
 		var t = Context.typeof(v);
 		var conds = new haxe.EnumFlags<Condition>();
@@ -153,6 +279,9 @@ class Macros {
 		return withPos(serializeExpr(ctx, v, pt),v.pos);
 	}
 
+	/**
+		Reads a value with the serializer `ctx` and stores it in `v`, with code generated for its type.
+	**/
 	public static macro function unserializeValue( ctx : Expr, v : Expr, depth : Int = 0, conds : Int = 0 ) : Expr {
 		var t = Context.typeof(v);
 		var conds : haxe.EnumFlags<Condition> = cast conds;
@@ -177,6 +306,9 @@ class Macros {
 		return withPos(unserializeExpr(ctx, v, pt, depth, conds), v.pos);
 	}
 
+	/**
+		Marks the objects referenced by the value (see `AnySerializable.markReferences`).
+	**/
 	public static macro function markValue( v : Expr ) : Expr {
 		var t = Context.typeof(v);
 		var conds = new haxe.EnumFlags<Condition>();
@@ -189,6 +321,9 @@ class Macros {
 		return se;
 	}
 
+	/**
+		Clears the references to marked objects in the value (see `AnySerializable.clearReferences`).
+	**/
 	public static macro function clearValue( v : Expr, ?isEnum:Bool ) : Expr {
 		var t = Context.typeof(v);
 		var conds = new haxe.EnumFlags<Condition>();
@@ -201,6 +336,9 @@ class Macros {
 		return se;
 	}
 
+	/**
+		Returns the `Schema.FieldType` of the value.
+	**/
 	public static macro function getFieldType( v : Expr ) {
 		var t = Context.typeof(v);
 		var conds = new haxe.EnumFlags<Condition>();
@@ -211,6 +349,9 @@ class Macros {
 		return macro $v{v};
 	}
 
+	/**
+		Returns the `Schema.FieldType` of a RPC function.
+	**/
 	public static macro function getRPCFieldType( v : Expr, rpcMode : Int ) {
 		var t = Context.typeof(v);
 		var conds = new haxe.EnumFlags<Condition>();
@@ -240,6 +381,9 @@ class Macros {
 		return macro $v{v};
 	}
 
+	/**
+		Calls `f` for each type contained in the type (keys and values of maps, values of arrays, fields of structures...).
+	**/
 	public static function iterType<T>( t : PropTypeDesc<T>, f : T -> Void ) {
 		switch( t ) {
 		case PMap(k, v):
@@ -260,6 +404,9 @@ class Macros {
 		}
 	}
 
+	/**
+		Tells if the result of a `@:rpc(checked)` method is a success: a `Bool`, or the value given by `@:rpcSuccess` for an enum (`null` is the success otherwise).
+	**/
 	public static macro function checkSuccess(e: Expr): Expr {
 		var t = Context.typeof(e);
 		switch(t) {
@@ -1334,6 +1481,7 @@ class Macros {
 			});
 			if( !serFound ) fields.push({
 				name : "serialize",
+				doc : "Writes the serialized fields of the object. Generated by `hxbit.Macros`.",
 				pos : pos,
 				access : access,
 				kind : FFun({
@@ -1388,6 +1536,7 @@ class Macros {
 			if( !patchField(fields,code,"markReferences") ) {
 				fields.push({
 					name : "markReferences",
+					doc : "Marks this object and the objects it references (see `hxbit.Serializable.AnySerializable.markReferences`). Generated by `hxbit.Macros`.",
 					pos : pos,
 					access : access,
 					kind : FFun({
@@ -1414,6 +1563,7 @@ class Macros {
 			if( !patchField(fields,code,"clearReferences") ) {
 				fields.push({
 					name : "clearReferences",
+					doc : "Removes the references to the objects marked to be cleared (see `hxbit.Serializable.AnySerializable.clearReferences`). Generated by `hxbit.Macros`.",
 					pos : pos,
 					access : access,
 					kind : FFun({
@@ -1483,6 +1633,7 @@ class Macros {
 
 			if( !unserFound ) fields.push({
 				name : "unserialize",
+				doc : "Reads the serialized fields of the object. Generated by `hxbit.Macros`.",
 				pos : pos,
 				access : access,
 				kind : FFun({
@@ -1985,7 +2136,9 @@ class Macros {
 						if( b < 30 ) __bits1 |= 1 << b else __bits2 |= 1 << (b-30);
 					}
 				}
+				/** Shares the object with the current `hxbit.NetworkHost` when set, and stops sharing it when unset. **/
 				public var enableReplication(get, set) : Bool;
+				/** Shares the object automatically when it is first sent over the network (as a value of a replicated object). **/
 				public var enableAutoReplication(get, set) : Bool;
 				inline function get_enableReplication() return __host != null;
 				inline function get_enableAutoReplication() return __next == this && __host == null;
@@ -2004,10 +2157,12 @@ class Macros {
 					}
 					return b;
 				}
+				/** Cancels the changes of the properties (`networkProp<Name>` constants, combined with `|`): they are not sent at the next flush. **/
 				public function networkCancelProperty( props : hxbit.NetworkSerializable.NetworkProperty ) {
 					var b = props.toInt();
 					if( b < 30 ) __bits1 &= ~(1<<b) else __bits2 &= ~(1<<(b-30));
 				}
+				/** Runs `f` without sending the changes it makes to the properties: they must be made on the server and all the clients. Clients are allowed to change the properties this way. **/
 				public inline function networkLocalChange( f : Void -> Void ) {
 					var old = __host;
 					__host = null;
@@ -2015,6 +2170,7 @@ class Macros {
 					__host = old;
 				}
 				#if hxbit_visibility
+				/** Requests a new evaluation of the visibility group, for example when the result of `evalVisibility` changed. **/
 				public function setVisibilityDirty( group : hxbit.VisibilityGroup ) {
 					__dirtyVisibilityGroups |= 1 << group.getIndex();
 					if( __next == null && __host != null ) @:privateAccess __host.mark(this);
@@ -2024,6 +2180,7 @@ class Macros {
 
 			if( !Lambda.exists(fields, function(f) return f.name == "networkAllow") )
 				fields = fields.concat((macro class {
+					/** Tells if the client is allowed to do the operation on the property or RPC `prop`. Returns `false`: define it to give rights to the clients. **/
 					public function networkAllow( mode : hxbit.NetworkSerializable.Operation, prop : Int, client : hxbit.NetworkSerializable ) {
 						return false;
 					}
@@ -2031,12 +2188,14 @@ class Macros {
 
 			if( !Lambda.exists(fields, function(f) return f.name == "alive") )
 				fields = fields.concat((macro class {
+					/** Called on the clients when the object has been received and initialized. Sets `enableReplication`: define it to do your initialization. **/
 					public function alive() { enableReplication = true; }
 				}).fields);
 
 			#if hxbit_visibility
 			if( !Lambda.exists(fields, function(f) return f.name == "evalVisibility") )
 				fields = fields.concat((macro class {
+					/** Tells if the properties of the visibility group are visible to the client. Returns `false`: define it to make them visible. **/
 					public function evalVisibility( group : hxbit.VisibilityGroup, from : hxbit.NetworkSerializable ) { return false; }
 				}).fields);
 			#end
@@ -2175,6 +2334,7 @@ class Macros {
 			var prop = "networkProp" + fname.charAt(0).toUpperCase() + fname.substr(1);
 			fields.push({
 				name : prop,
+				doc : "The network property of `" + fname + "`, for `networkCancelProperty`.",
 				pos : pos,
 				kind : FProp("get", "never", macro : hxbit.NetworkSerializable.NetworkProperty),
 				access : [APublic],
@@ -3179,12 +3339,14 @@ class Macros {
 			var pos = Context.currentPos();
 			Context.defineType({
 				name : "VisibilityGroupDef",
+				doc : "The visibility groups set with `hxbit.Macros.initVisibility`. Generated by `hxbit.Macros`.",
 				pack : ["hxbit"],
 				pos : pos,
 				kind : TDEnum,
 				fields : [for( c in VISIBILITY_VALUES ) {
 					pos : pos,
 					name : c.charAt(0).toUpperCase() + c.substr(1),
+					doc : "The `" + c + "` visibility group.",
 					kind : FVar(null,null),
 				}],
 			});

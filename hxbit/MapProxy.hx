@@ -23,32 +23,62 @@ package hxbit;
 
 import hxbit.NetworkSerializable;
 
+/**
+	The data of a `MapProxy`: the wrapped map, and the property of the host it is bound to.
+**/
 @:generic class MapData<K,V> extends BaseProxy {
+	/**
+		The wrapped map.
+	**/
 	public var map : Map<K,V>;
+	/**
+		Wraps the map.
+	**/
 	public function new(map) {
 		this.map = map;
 	}
+	/**
+		Iterates over the values of the map.
+	**/
 	public function iterator() {
 		return map.iterator();
 	}
 }
 
+/**
+	The proxy of a `Map` stored in a property of a `NetworkSerializable`: the functions modifying the map mark the property as changed, which sends the whole map again. Maps are converted to proxies implicitly.
+**/
 abstract MapProxy<K,V>(MapData<K,V>) to ProxyChild {
 
 	@:noCompletion public var __value(get, never) : Map<K,V>;
 	inline function get___value() return this == null ? null : this.map;
 
+	/**
+		Sets the value of the key, and marks the property as changed.
+	**/
 	public inline function set(key:K, value:V) {
 		this.mark();
 		this.map.set(key, value);
 	}
 
+	/**
+		Returns the wrapped map: changes made to it directly don't mark the property as changed.
+	**/
 	public inline function getMap() {
 		return __value;
 	}
 
+	/**
+		Returns the value of the key, or `null`.
+	**/
 	@:arrayAccess public inline function get(key:K) return this.map.get(key);
+	/**
+		Tells if the key has a value.
+	**/
 	public inline function exists(key:K) return this.map.exists(key);
+	/**
+		Removes the value of the key, and marks the property as changed if found. Returns `true` if found.
+	**/
 	public inline function remove(key:K) {
 		var b = this.map.remove(key);
 		if( b ) this.mark();
@@ -63,22 +93,37 @@ abstract MapProxy<K,V>(MapData<K,V>) to ProxyChild {
 		this.unbindHost();
 	}
 
+	/**
+		Returns a proxy of a copy of the value, not bound to a host.
+	**/
 	public inline function copy() : MapProxy<K,V> {
 		return cast new MapData(__value.copy());
 	}
 
+	/**
+		Iterates over the keys.
+	**/
 	public inline function keys():Iterator<K> {
 		return this.map.keys();
 	}
 
+	/**
+		Iterates over the values.
+	**/
 	public inline function iterator():Iterator<V> {
 		return this.map.iterator();
 	}
 
+	/**
+		Iterates over the keys and values.
+	**/
 	public inline function keyValueIterator():KeyValueIterator<K,V> {
 		return this.map.keyValueIterator();
 	}
 
+	/**
+		Returns the string representation of the value.
+	**/
 	public inline function toString():String {
 		return this.map.toString();
 	}
@@ -97,11 +142,17 @@ abstract MapProxy<K,V>(MapData<K,V>) to ProxyChild {
 }
 
 
+/**
+	The proxy of a `Map` of proxies (a map of mutable values): like `MapProxy`, and the values are bound to the map, so that their changes mark the property as changed.
+**/
 abstract MapProxy2<K,V:ProxyChild>(MapData<K,V>) to ProxyChild {
 
 	@:noCompletion public var __value(get, never) : Map<K,V>;
 	inline function get___value() return this == null ? null : this.map;
 
+	/**
+		Sets the value of the key, and marks the property as changed.
+	**/
 	public inline function set(key:K, value:V) {
 		var prev = this.map.get(key);
 		if( prev != null ) unbind(prev);
@@ -110,6 +161,9 @@ abstract MapProxy2<K,V:ProxyChild>(MapData<K,V>) to ProxyChild {
 		this.map.set(key, value);
 	}
 
+	/**
+		Returns the wrapped map: changes made to it directly don't mark the property as changed.
+	**/
 	public inline function getMap() {
 		return __value;
 	}
@@ -122,8 +176,17 @@ abstract MapProxy2<K,V:ProxyChild>(MapData<K,V>) to ProxyChild {
 		if( v != null ) v.unbindHost();
 	}
 
+	/**
+		Returns the value of the key, or `null`.
+	**/
 	@:arrayAccess public inline function get(key:K) return this.map.get(key);
+	/**
+		Tells if the key has a value.
+	**/
 	public inline function exists(key:K) return this.map.exists(key);
+	/**
+		Removes the value of the key, and marks the property as changed if found. Returns `true` if found.
+	**/
 	public inline function remove(key:K) {
 		var v = this.map.get(key);
 		var b = this.map.remove(key);
@@ -142,22 +205,37 @@ abstract MapProxy2<K,V:ProxyChild>(MapData<K,V>) to ProxyChild {
 		this.unbindHost();
 	}
 
+	/**
+		Returns a proxy of a copy of the value, not bound to a host.
+	**/
 	public inline function copy() : MapProxy<K,V> {
 		return cast new MapData(__value.copy());
 	}
 
+	/**
+		Iterates over the keys.
+	**/
 	public inline function keys():Iterator<K> {
 		return this.map.keys();
 	}
 
+	/**
+		Iterates over the values.
+	**/
 	public inline function iterator():Iterator<V> {
 		return this.map.iterator();
 	}
 
+	/**
+		Iterates over the keys and values.
+	**/
 	public inline function keyValueIterator():KeyValueIterator<K,V> {
 		return this.map.keyValueIterator();
 	}
 
+	/**
+		Returns the string representation of the value.
+	**/
 	public inline function toString():String {
 		return this.map.toString();
 	}

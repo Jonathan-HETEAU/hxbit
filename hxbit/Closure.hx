@@ -4,6 +4,9 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 using haxe.macro.ExprTools;
 
+/**
+	A serializable function, returning `T`: create it with `Closure.make(function() ...)`. The code is compiled in a generated class (in the `hxbit.closure` package) and the captured local variables are serialized with the closure, so it can be stored or sent and called later.
+**/
 class Closure<T> #if !macro implements hxbit.Serializable #end {
 
 	@:s var __cid : String;
@@ -14,6 +17,9 @@ class Closure<T> #if !macro implements hxbit.Serializable #end {
 		this.__args = args;
 	}
 
+	/**
+		Calls the function, with the captured values.
+	**/
 	public function call() : T {
 		var cl = registeredClosures[__cid];
 		cl.__args = __args;
@@ -90,6 +96,9 @@ class Closure<T> #if !macro implements hxbit.Serializable #end {
 
 	#end
 
+	/**
+		Creates a serializable closure from a function without arguments. The captured local variables (and `this`) must be serializable. `parentType` is the class to extend instead of `hxbit.Closure`.
+	**/
 	public static macro function make( funExpr : Expr, ?parentType : String ) {
 		var pos = funExpr.pos;
 		switch( funExpr.expr ) {

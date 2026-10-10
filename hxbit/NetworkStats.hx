@@ -1,30 +1,72 @@
 package hxbit;
 
+/**
+	The statistics of a class.
+**/
 typedef StatClass = {
+	/**
+		The name of the class.
+	**/
 	var name : String;
+	/**
+		The statistics of the properties, by index.
+	**/
 	var props : Array<Stat>;
+	/**
+		The statistics of the RPCs, by index.
+	**/
 	var rpcs : Array<Stat>;
+	/**
+		The schema of the class.
+	**/
 	var schema : Schema;
+	/**
+		The number of times objects of the class sent their changed properties.
+	**/
 	var syncCount : Int;
 }
 
+/**
+	The statistics of a property or of a RPC.
+**/
 typedef Stat = {
+	/**
+		The class.
+	**/
 	var cl : StatClass;
+	/**
+		The name of the property or RPC (`null` for the statistics of the class).
+	**/
 	var name : String;
+	/**
+		The number of times it was sent.
+	**/
 	var count : Int;
+	/**
+		The number of bytes sent.
+	**/
 	var bytes : Int;
+	/**
+		Not used.
+	**/
 	var size : Int;
 }
 
 private enum EmptyEnum {
 }
 
+/**
+	Collects the number of times each property and RPC is sent and the number of bytes used, by class (see `NetworkHost.setStats`).
+**/
 class NetworkStats {
 
 	var classes : Map<Int,StatClass>;
 	var structs : Map<String,StatClass>;
 	var curRPC : Stat;
 
+	/**
+		Creates empty statistics.
+	**/
 	public function new() {
 		classes = new Map();
 		structs = new Map();
@@ -191,6 +233,9 @@ class NetworkStats {
 		return size;
 	}
 
+	/**
+		Counts the changed properties of the object, before they are sent.
+	**/
 	public function sync( o : NetworkSerializable ) {
 		var c = getClass(o);
 		inline function calc(bits : Int, offset: Int) {
@@ -213,11 +258,17 @@ class NetworkStats {
 		calc(o.__bits2, 30);
 	}
 
+	/**
+		Counts a sending of the changed properties of the object.
+	**/
 	public function preSync( o : NetworkSerializable ) {
 		var c = getClass(o);
 		c.syncCount++;
 	}
 
+	/**
+		Counts a call of the RPC, and returns its statistics.
+	**/
 	public function beginRPC( o : NetworkSerializable, id : Int ) {
 		var c = getClass(o);
 		var r = c.rpcs[id];
@@ -230,6 +281,9 @@ class NetworkStats {
 		return r;
 	}
 
+	/**
+		Adds the size of the RPC started by `beginRPC`.
+	**/
 	public function endRPC( size : Int ) {
 		curRPC.bytes += size;
 		curRPC = null;
@@ -239,6 +293,9 @@ class NetworkStats {
 		return p.count * 4 + p.bytes;
 	}
 
+	/**
+		Prints the statistics, sorted by importance (with `Sys.println` or `trace` by default).
+	**/
 	public function dump( ?print ) {
 		var all = [];
 		for( c in classes ) {
@@ -265,6 +322,9 @@ class NetworkStats {
 			print("\t"+p.cl.name+(p.name == null ? "" : "." + p.name)+"\t" + p.count + "\t" + p.bytes + "\t" + (Std.int(p.bytes*1000.0/tot)/10));
 	}
 
+	/**
+		Clears the statistics of the classes.
+	**/
 	public function reset() {
 		classes = new Map();
 	}

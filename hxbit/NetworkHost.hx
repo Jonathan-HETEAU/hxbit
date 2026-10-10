@@ -22,6 +22,9 @@
 package hxbit;
 import hxbit.NetworkSerializable.NetworkSerializer;
 
+/**
+	A connection of a `NetworkHost`: on the server (authority), one for each connected client; on a client, the connection to the server. Extend it to send the data (override `send`) and call `processMessagesData` when data is received.
+**/
 class NetworkClient {
 
 	var host : NetworkHost;
@@ -29,14 +32,32 @@ class NetworkClient {
 	var processID : Int;
 	var needAlive : Bool;
 	var wasSync : Bool;
+	/**
+		The sequence number of the client, given by the server: the UIDs allocated by the client start with it, so they don't conflict with the other clients.
+	**/
 	public var seqID : Int;
+	/**
+		The object representing the client (its player), given to `NetworkSerializable.networkAllow` and `evalVisibility`.
+	**/
 	public var ownerObject(default,set) : NetworkSerializable;
+	/**
+		The time (`haxe.Timer.stamp`) of the last data received, used for the `NetworkHost.clientTimeout`.
+	**/
 	public var lastMessage : Float;
+	/**
+		The time (`haxe.Timer.stamp`) of the last data sent, used for the `NetworkHost.autoPingTime`.
+	**/
 	public var lastSentMessage : Float;
 	#if hxbit_visibility
+	/**
+		The serializer of the data sent to the client (with `-D hxbit_visibility`).
+	**/
 	public var ctx : NetworkSerializable.NetworkSerializer;
 	#end
 
+	/**
+		Creates a connection of the host.
+	**/
 	public function new(h) {
 		this.host = h;
 		processID = 0;
@@ -51,6 +72,9 @@ class NetworkClient {
 		#end
 	}
 
+	/**
+		Sends the full state to a newly connected client (pending client of the server): all the replicated objects. The client then receives `NetworkHost.onFullSync`.
+	**/
 	public function sync() {
 		host.fullSync(this);
 	}
@@ -59,6 +83,9 @@ class NetworkClient {
 	function send(bytes : haxe.io.Bytes) {
 	}
 
+	/**
+		Sends a message to the other side, received by `NetworkHost.onMessage`.
+	**/
 	public function sendMessage( msg : Dynamic ) {
 		if( host != null ) host.sendMessage(msg, this);
 	}
@@ -477,10 +504,16 @@ class NetworkClient {
 		}
 	}
 
+	/**
+		Called when nothing was received for `NetworkHost.clientTimeout` seconds. Calls `stop` by default.
+	**/
 	public function timeout() {
 		stop();
 	}
 
+	/**
+		Closes the connection: removes the client from the host.
+	**/
 	public function stop() {
 		if( host == null ) return;
 		host.clients.remove(this);
@@ -497,6 +530,11 @@ class NetworkClient {
 
 }
 
+/**
+	Replicates `NetworkSerializable` objects between a server (the authority, `isAuth`) and its clients: sends the changed properties, the registered and unregistered objects and the RPCs.
+
+	The transport is not implemented here: extend `NetworkHost` and `NetworkClient` (see `hxd.net.SocketHost` in Heaps). Call `flush` regularly (every frame) to send the changes. The objects with `enableReplication` set are registered on the `current` host.
+**/
 @:allow(hxbit.NetworkClient)
 class NetworkHost {
 
@@ -516,18 +554,30 @@ class NetworkHost {
 	static inline var PING		 = 0xFE;
 	static inline var EOM		 = 0xFF;
 
+	/**
+		Tells if each message ends with an end of message byte, checked when reading.
+	**/
 	public var checkEOM(get, never) : Bool;
 	inline function get_checkEOM() return true;
 
 	#if hxbit_host_mt
 	static var __current = new sys.thread.Tls<NetworkHost>();
+	/**
+		The host on which objects are registered by `NetworkSerializable.enableReplication`. Set by the constructor.
+	**/
 	public static var current(get,set) : NetworkHost;
 	static function set_current(v) { __current.value = v; return v; }
 	static function get_current() return __current.value;
 	#else
+	/**
+		The host on which objects are registered by `NetworkSerializable.enableReplication`. Set by the constructor.
+	**/
 	public static var current : NetworkHost = null;
 	#end
 
+	/**
+		Tells if this side is the authority (the server): only the authority can change the properties and call the RPCs freely.
+	**/
 	public var isAuth(default, null) : Bool;
 
 	/**
@@ -540,8 +590,17 @@ class NetworkHost {
 	**/
 	public var rpcObject : NetworkSerializable;
 
+	/**
+		The average number of bytes sent per second, updated by `flush`.
+	**/
 	public var sendRate : Float = 0.;
+	/**
+		The total number of bytes sent, including an estimation of the packet headers.
+	**/
 	public var totalSentBytes : Int = 0;
+	/**
+		Tells if received properties are being set (in the property setters).
+	**/
 	public var syncingProperties = false;
 
 	/**
@@ -591,13 +650,28 @@ class NetworkHost {
 	var rpcClientValue : NetworkClient;
 	var receivingClient : NetworkClient;
 	var aliveEvents : Array<Void->Void>;
+	/**
+		The connected clients (on the server), or the connection to the server (on a client).
+	**/
 	public var clients : Array<NetworkClient>;
+	/**
+		The client representing this side.
+	**/
 	public var self(default,null) : NetworkClient;
+	/**
+		Delays the registration of the objects to the next `flush`, so that their properties can be set before they are sent.
+	**/
 	public var lateRegistration = false;
 	#if hxbit_visibility
+	/**
+		The object from which the objects visible by a client are found by `checkReferences` (with `-D hxbit_visibility`).
+	**/
 	public var rootObject : NetworkSerializable;
 	#end
 
+	/**
+		Creates the host, as the authority, and makes it the `current` one.
+	**/
 	public function new() {
 		current = this;
 		isAuth = true;
@@ -616,14 +690,23 @@ class NetworkHost {
 		return targetClient = n;
 	}
 
+	/**
+		Unsets the `current` host if it is this one.
+	**/
 	public function dispose() {
 		if( current == this ) current = null;
 	}
 
+	/**
+		Tells if a client has the given owner object.
+	**/
 	public function isConnected(owner) {
 		return resolveClient(owner) != null;
 	}
 
+	/**
+		Returns the client having the given owner object, or `null`.
+	**/
 	public function resolveClient(owner) {
 		if( self.ownerObject == owner )
 			return self;
@@ -634,11 +717,17 @@ class NetworkHost {
 	}
 
 	#if hxbit_visibility
+	/**
+		Tells if the visibility data `from` is the one of the client having the owner object `obj`.
+	**/
 	public function matchClient(obj,from:Serializable.MarkParam) {
 		return resolveClient(obj)?.ctx.cachedVisibility == from;
 	}
 	#end
 
+	/**
+		Forgets all the replicated objects and resets the UIDs.
+	**/
 	public function resetState() {
 		hxbit.Serializer.resetCounters();
 		ctx = new NetworkSerializer(this);
@@ -650,6 +739,9 @@ class NetworkHost {
 		#end
 	}
 
+	/**
+		Returns the replicated objects as versioned data (see `Serializer.beginSave`).
+	**/
 	public function saveState() {
 		var s = new hxbit.Serializer();
 		s.beginSave();
@@ -662,6 +754,9 @@ class NetworkHost {
 		return s.endSave();
 	}
 
+	/**
+		Loads the objects saved by `saveState`. Call `makeAlive` after loading.
+	**/
 	public function loadSave( bytes : haxe.io.Bytes ) {
 		ctx.enableChecks = false;
 		ctx.refs = new Serializer.UIDMap();
@@ -716,32 +811,59 @@ class NetworkHost {
 		}
 	}
 
+	/**
+		Called on network errors (for example a not allowed operation of a client). Throws by default.
+	**/
 	public dynamic function logError( msg : String, ?objectId : UID ) {
 		throw msg + (objectId == null ? "":  "(" + objectId + ")");
 	}
 
+	/**
+		Called on a client when the signature of the server is different (see `getSignature`): the classes don't match.
+	**/
 	public dynamic function onInvalidSignature() {
 		logError("Network signature mismatch");
 	}
 
+	/**
+		Called on the server when a client sends too much data at once (more than 1MB, or more than 100 messages).
+	**/
 	public dynamic function onMessageFlood( from : NetworkClient, bytes : haxe.io.Bytes, pos : Int, length : Int ) {
 	}
 
+	/**
+		Called when a message sent with `sendMessage` is received.
+	**/
 	public dynamic function onMessage( from : NetworkClient, msg : Dynamic ) {
 	}
 
+	/**
+		Called when an object is unregistered by the other side.
+	**/
 	public dynamic function onUnregister(o : hxbit.NetworkSerializable) {
 	}
 
+	/**
+		Called on a client when the full state of the server was received, with the first object.
+	**/
 	public dynamic function onFullSync( firstObject : hxbit.Serializable ) {
 	}
 
+	/**
+		Called when changed properties of the object were received: `bits1` and `bits2` are the changed properties (see `NetworkSerializable.__bits1`).
+	**/
 	public dynamic function onSync( obj : hxbit.NetworkSerializable, bits1 : Int, bits2 : Int ) {
 	}
 
+	/**
+		Called when the answer to a `ping` is received.
+	**/
 	public dynamic function onPong( from : NetworkClient ) {
 	}
 
+	/**
+		Sends a message (any value serialized with `haxe.Serializer`, or bytes) to a client, or to all the clients if `to` is `null`. It is received by `onMessage`.
+	**/
 	public function sendMessage( msg : Dynamic, ?to : NetworkClient ) {
 		partialFlush();
 		var prev = targetClient;
@@ -878,8 +1000,14 @@ class NetworkHost {
 	}
 
 	static var __SIGN = null;
+	/**
+		A version number included in the signature: increase it to make older clients incompatible.
+	**/
 	public static var VERSION = 0;
 
+	/**
+		Returns the signature of the serializable classes and their RPCs, compared by the clients with the server's (see `onInvalidSignature`).
+	**/
 	public static function getSignature() : haxe.io.Bytes {
 		if( __SIGN != null ) return __SIGN;
 		var s = new Serializer();
@@ -899,6 +1027,9 @@ class NetworkHost {
 		return __SIGN = haxe.crypto.Md5.make(s.end());
 	}
 
+	/**
+		Logs the network activity with `Sys.println` (or `trace`), for the messages accepted by `filter`.
+	**/
 	public function defaultLogger( ?filter : String -> Bool ) {
 		var t0 = haxe.Timer.stamp();
 		setLogger(function(str) {
@@ -913,14 +1044,23 @@ class NetworkHost {
 		return o + "#" + #if hxbit64 StringTools.hex(o.__uid.high)+StringTools.hex(o.__uid.low, 8) #else o.__uid #end;
 	}
 
+	/**
+		Adds a function called by `makeAlive`, after the `alive` calls.
+	**/
 	public inline function addAliveEvent(f) {
 		aliveEvents.push(f);
 	}
 
+	/**
+		Tells if all the received objects are alive and the alive events were called.
+	**/
 	public function isAliveComplete() {
 		return @:privateAccess ctx.newObjects.length == 0 && aliveEvents.length == 0;
 	}
 
+	/**
+		Calls `alive` on the received objects, in order of creation, then the alive events.
+	**/
 	public function makeAlive() {
 		var objs = @:privateAccess globalCtx.newObjects;
 		if( objs.length == 0 )
@@ -942,10 +1082,16 @@ class NetworkHost {
 			aliveEvents.shift()();
 	}
 
+	/**
+		Sets the function logging the network activity, or `null`.
+	**/
 	public function setLogger( log : String -> Void ) {
 		this.logger = log;
 	}
 
+	/**
+		Sets the `NetworkStats` collecting the statistics of the data sent, or `null`.
+	**/
 	public function setStats( stats ) {
 		this.stats = stats;
 	}
@@ -1149,6 +1295,9 @@ class NetworkHost {
 		o.__next = null;
 	}
 
+	/**
+		Tells if the registration of the object is delayed to the next `flush` (see `lateRegistration`).
+	**/
 	public function isPendingRegistration( o : NetworkSerializable ) {
 		var h = registerHead, p : hxbit.NetworkSerializable = null;
 		while( p != h ) {
@@ -1353,6 +1502,9 @@ class NetworkHost {
 		markHead = null;
 	}
 
+	/**
+		Sends the pending registrations and the changed properties, updates `sendRate`, and handles the client timeouts and automatic pings.
+	**/
 	public function flush() {
 		flushProps();
 		if( @:privateAccess globalCtx.out.length > 0 ) doSend();
@@ -1409,6 +1561,9 @@ class NetworkHost {
 
 	#if hxbit_visibility
 	var markInf = new hxbit.Serializable.MarkInfo(1,1);
+	/**
+		Unregisters, on the client (or all the clients), the objects which are not visible anymore from the `rootObject` (with `-D hxbit_visibility`).
+	**/
 	public function checkReferences( ?client : NetworkClient ) {
 		if( client == null ) {
 			for( c in clients )

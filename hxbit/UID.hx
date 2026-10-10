@@ -21,4 +21,7 @@
  */
 package hxbit;
 
+/**
+	The unique identifier of a `Serializable` object: an `Int`, or an `haxe.Int64` with `-D hxbit64`. The highest bits store the sequence number (see `NetworkHost`).
+**/
 typedef UID = #if hxbit64 haxe.Int64 #else Int #end;

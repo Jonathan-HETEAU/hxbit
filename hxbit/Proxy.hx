@@ -21,6 +21,9 @@
  */
 package hxbit;
 
+/**
+	The proxy type generated for the mutable type `T` (`Array`, `Map`, `haxe.ds.Vector`, structure): wraps a value to mark the network property changed when the value is modified (see `ArrayProxy`, `MapProxy`, `VectorProxy`).
+**/
 @:genericBuild(hxbit.Macros.buildSerializableProxy())
 class Proxy<T> {
 }

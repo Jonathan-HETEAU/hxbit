@@ -1,5 +1,8 @@
 package hxbit;
 
+/**
+	Converts versioned data (written by `Serializer.endSave`) to a structure that can be saved as JSON, for debugging. The classes are not needed: the schemas stored in the data are used. Only on `sys` targets.
+**/
 class Dump extends Serializer {
 
 	var cachedEnum : Map<String, Schema>;
@@ -8,12 +11,18 @@ class Dump extends Serializer {
 	var hhashed : Map<Int,{name:String, index:Int, schema:Schema }>;
 	var hclasses : Map<String,{ name : String, index : Int, schema : Schema }>;
 
+	/**
+		Creates the dump of the data.
+	**/
 	public function new( data : haxe.io.Bytes ) {
 		super();
 		setInput(data, 0);
 		drefs = new Map();
 	}
 
+	/**
+		Returns the data as a structure: the version, the classes (with the CRC of their schema) and the objects. Bytes of 64 bytes or more are saved to `<md5>.bin` files.
+	**/
 	public function dumpObj() {
 		if( getString() != "HXS" )
 			throw "Invalid HXS data";
@@ -52,6 +61,9 @@ class Dump extends Serializer {
 		return { version : version, classes : cobjs, objs : objs };
 	}
 
+	/**
+		Saves the result of `dumpObj` as a JSON file.
+	**/
 	public function dump( file = "dump.json" ) {
 		sys.io.File.saveContent(file, haxe.Json.stringify(dumpObj(), "\t"));
 	}

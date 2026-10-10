@@ -1,7 +1,13 @@
 package hxbit;
 
+/**
+	A weak reference to a `NetworkSerializable` object: stores its UID only, and resolves it from the current `NetworkHost`.
+**/
 @:fromNull
 abstract Weak<T:NetworkSerializable>(UID) {
+	/**
+		Returns the referenced object, or `null` if it is not known by the current `NetworkHost`.
+	**/
 	public inline function get() : T return resolve(this);
 	@:from static inline function from<T:NetworkSerializable>( v : T ) : Weak<T> {
 		return cast v?.__uid;

@@ -46,34 +46,69 @@ private class NativeKeyValueIterator<T> {
 	}
 }
 
+/**
+	A map of values by object UID.
+**/
 abstract UIDMap<T>(hl.types.Int64Map) {
 	public inline function new() {
 		this = new hl.types.Int64Map();
 	}
+	/**
+		Returns the value of the UID, or `null`.
+	**/
 	@:arrayAccess public inline function get( id : UID ) : Null<T> {
 		return this.get(id);
 	}
+	/**
+		Sets the value of the UID and returns it.
+	**/
 	@:arrayAccess public inline function set( id : UID, v : T ) {
 		this.set(id,v);
 		return v;
 	}
+	/**
+		Removes the value of the UID.
+	**/
 	public inline function remove( id : UID ) {
 		return this.remove(id);
 	}
+	/**
+		Tells if the UID has a value.
+	**/
 	public inline function exists( id : UID ) {
 		return this.exists(id);
 	}
+	/**
+		Iterates over the values.
+	**/
 	public inline function iterator() {
 		return new hl.NativeArray.NativeArrayIterator<T>(cast this.valuesArray());
 	}
+	/**
+		Iterates over the UIDs and values.
+	**/
 	public inline function keyValueIterator() {
 		return new NativeKeyValueIterator<T>(this);
 	}
 }
 #else
+/**
+	A map of values by object UID.
+**/
 typedef UIDMap<T> = Map<UID,T>;
 #end
 
+/**
+	Reads and writes the binary data of `Serializable` objects and of the basic values.
+
+	```haxe
+	var bytes = new hxbit.Serializer().serialize(obj);
+	var obj2 = new hxbit.Serializer().unserialize(bytes, MyClass);
+	```
+
+	Use `save` and `load` (or `beginSave`/`endSave` and `beginLoad`/`endLoad`) to store the schemas of the classes with the data, so that data saved with an older version of the classes can be loaded (removed fields are ignored, added fields get a default value).
+	Each object is written once: further references write its UID only.
+**/
 class Serializer {
 
 	#if hxbit_host_mt
@@ -92,6 +127,9 @@ class Serializer {
 	static inline var SEQ_BITS = #if hxbit64 12 #else 8 #end;
 	static #if (!js || !hxbit64) inline #end var SEQ_MASK = (-1:UID) >>> SEQ_BITS;
 
+	/**
+		Resets the allocation of the UIDs.
+	**/
 	public static function resetCounters() {
 		UID = 0;
 		SEQ = 0;
@@ -161,11 +199,17 @@ class Serializer {
 		}
 	}
 
+	/**
+		Tells if the class of the given index has no serializable super or sub class (its objects are written without class identifier).
+	**/
 	public static function isClassFinal( index : Int ) {
 		if( CLIDS == null ) initClassIDS();
 		return CLIDS[index] == 0;
 	}
 
+	/**
+		The objects written or read, by UID.
+	**/
 	public var refs : UIDMap<Serializable>;
 
 	/**
@@ -188,16 +232,28 @@ class Serializer {
 	var visibilityGroups : Int = -1;
 	var hasVisibility : Bool;
 	#end
+	/**
+		Tells if the data is saved (`@:noSave` fields are skipped). `NetworkSerializer` unsets it.
+	**/
 	public var forSave : Bool = true;
 
+	/**
+		Creates a serializer.
+	**/
 	public function new() {
 		if( CLIDS == null ) initClassIDS();
 	}
 
+	/**
+		Returns the read position, or the write position if `write` is set (HashLink only, `-1` on other targets).
+	**/
 	public inline function getPosition( write : Bool = false ) {
 		return write ? (#if hl @:privateAccess out.pos #else -1 #end) : inPos;
 	}
 
+	/**
+		Overwrites the 32 bits integer at the write position `pos` (HashLink only, ignored if `pos` is negative).
+	**/
 	public inline function writeToPosition( pos : Int, value : Int ) {
 		if( pos >= 0 ) {
 			#if hl
@@ -219,11 +275,17 @@ class Serializer {
 		s.__uid = allocUID();
 	}
 
+	/**
+		Starts writing: clears the output and the references.
+	**/
 	public function begin() {
 		out = new haxe.io.BytesBuffer();
 		refs = new UIDMap();
 	}
 
+	/**
+		Returns the written bytes, and clears the output and the references.
+	**/
 	public function end() {
 		var bytes = out.getBytes();
 		out = null;
@@ -231,32 +293,50 @@ class Serializer {
 		return bytes;
 	}
 
+	/**
+		Sets the bytes to read from, and the read position.
+	**/
 	public function setInput(data, pos) {
 		input = data;
 		inPos = pos;
 		if( refs == null ) refs = new UIDMap();
 	}
 
+	/**
+		Writes the object (and the objects it references) and returns the bytes. The data has no schema: use `save` for versioned data.
+	**/
 	public function serialize( s : Serializable ) {
 		begin();
 		addKnownRef(s);
 		return out.getBytes();
 	}
 
+	/**
+		Reads an object of the class `c` (or a sub class) written by `serialize`.
+	**/
 	public function unserialize<T:Serializable>( data : haxe.io.Bytes, c : Class<T>, startPos = 0 ) : T {
 		refs = new UIDMap();
 		setInput(data, startPos);
 		return getKnownRef(c);
 	}
 
+	/**
+		Reads a byte.
+	**/
 	public inline function getByte() {
 		return input.get(inPos++);
 	}
 
+	/**
+		Writes a byte.
+	**/
 	public function addByte(v:Int) {
 		out.addByte(v);
 	}
 
+	/**
+		Writes an UID.
+	**/
 	public inline function addUID(v:UID) {
 		#if hxbit64
 		out.addInt64(v);
@@ -265,6 +345,9 @@ class Serializer {
 		#end
 	}
 
+	/**
+		Reads an UID.
+	**/
 	public inline function getUID() : UID {
 		#if hxbit64
 		var v = input.getInt64(inPos);
@@ -275,6 +358,9 @@ class Serializer {
 		#end
 	}
 
+	/**
+		Writes an integer: a byte for `0` to `127`, 5 bytes otherwise.
+	**/
 	public function addInt(v:Int) {
 		if( v >= 0 && v < 0x80 )
 			out.addByte(v);
@@ -284,26 +370,44 @@ class Serializer {
 		}
 	}
 
+	/**
+		Writes an integer on 4 bytes.
+	**/
 	public function addInt32(v:Int) {
 		out.addInt32(v);
 	}
 
+	/**
+		Writes a 64 bits integer.
+	**/
 	public function addInt64(v:haxe.Int64) {
 		out.addInt64(v);
 	}
 
+	/**
+		Writes a float, with 32 bits precision.
+	**/
 	public function addFloat(v:Float) {
 		out.addFloat(v);
 	}
 
+	/**
+		Writes a float, with 64 bits precision.
+	**/
 	public function addDouble(v:Float) {
 		out.addDouble(v);
 	}
 
+	/**
+		Writes a boolean, as a byte.
+	**/
 	public function addBool(v:Bool) {
 		out.addByte(v?1:0);
 	}
 
+	/**
+		Writes an array (or `null`), calling `f` to write each value.
+	**/
 	public inline function addArray<T>(a:Array<T>,f:T->Void) {
 		if( a == null ) {
 			addByte(0);
@@ -314,6 +418,9 @@ class Serializer {
 			f(v);
 	}
 
+	/**
+		Writes a vector (or `null`), calling `f` to write each value.
+	**/
 	public inline function addVector<T>(a:haxe.ds.Vector<T>,f:T->Void) {
 		if( a == null ) {
 			addByte(0);
@@ -324,6 +431,9 @@ class Serializer {
 			f(v);
 	}
 
+	/**
+		Reads an array (or `null`), calling `f` to read each value.
+	**/
 	public inline function getArray<T>(f:Void->T) : Array<T> {
 		var len = getInt();
 		if( len == 0 )
@@ -335,6 +445,9 @@ class Serializer {
 		return a;
 	}
 
+	/**
+		Reads a vector (or `null`), calling `f` to read each value.
+	**/
 	public inline function getVector<T>(f:Void->T) : haxe.ds.Vector<T> {
 		var len = getInt();
 		if( len == 0 )
@@ -346,6 +459,9 @@ class Serializer {
 		return a;
 	}
 
+	/**
+		Writes a map (or `null`), calling `fk` and `ft` to write each key and value.
+	**/
 	public inline function addMap<K,T>(a:Map<K,T>,fk:K->Void,ft:T->Void) {
 		if( a == null ) {
 			addByte(0);
@@ -359,6 +475,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Reads a map (or `null`), calling `fk` and `ft` to read each key and value.
+	**/
 	extern public inline function getMap<K,T>(fk:Void->K, ft:Void->T) : Map<K,T> {
 		var len = getInt();
 		if( len == 0 )
@@ -372,10 +491,16 @@ class Serializer {
 		return m;
 	}
 
+	/**
+		Reads a boolean.
+	**/
 	public inline function getBool() {
 		return getByte() != 0;
 	}
 
+	/**
+		Reads an integer written by `addInt`.
+	**/
 	public function getInt() {
 		var v = getByte();
 		if( v == 0x80 ) {
@@ -385,34 +510,52 @@ class Serializer {
 		return v;
 	}
 
+	/**
+		Skips `size` bytes.
+	**/
 	public inline function skip(size) {
 		inPos += size;
 	}
 
+	/**
+		Reads an integer written on 4 bytes.
+	**/
 	public inline function getInt32() {
 		var v = input.getInt32(inPos);
 		inPos += 4;
 		return v;
 	}
 
+	/**
+		Reads a 64 bits integer.
+	**/
 	public inline function getInt64() {
 		var v = input.getInt64(inPos);
 		inPos += 8;
 		return v;
 	}
 
+	/**
+		Reads a float with 64 bits precision.
+	**/
 	public inline function getDouble() {
 		var v = input.getDouble(inPos);
 		inPos += 8;
 		return v;
 	}
 
+	/**
+		Reads a float with 32 bits precision.
+	**/
 	public inline function getFloat() {
 		var v = input.getFloat(inPos);
 		inPos += 4;
 		return v;
 	}
 
+	/**
+		Writes a string (or `null`), in UTF-8.
+	**/
 	public function addString( s : String ) {
 		if( s == null )
 			out.addByte(0);
@@ -423,6 +566,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Writes bytes (or `null`).
+	**/
 	public function addBytes( b : haxe.io.Bytes ) {
 		if( b == null )
 			out.addByte(0);
@@ -432,6 +578,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Writes `len` bytes of `b` from `pos` (or `null`), to be read with `getBytes`.
+	**/
 	public function addBytesSub( b : haxe.io.Bytes, pos : Int, len : Int ) {
 		if( b == null )
 			out.addByte(0);
@@ -441,6 +590,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Reads a string (or `null`).
+	**/
 	public function getString() {
 		var len = getInt();
 		if( len == 0 )
@@ -451,6 +603,9 @@ class Serializer {
 		return s;
 	}
 
+	/**
+		Reads bytes (or `null`).
+	**/
 	public function getBytes() {
 		var len = getInt();
 		if( len == 0 )
@@ -461,6 +616,9 @@ class Serializer {
 		return s;
 	}
 
+	/**
+		Reads a value written by `addDynamic`.
+	**/
 	public function getDynamic() : Dynamic {
 		switch( getByte() ) {
 		case 0:
@@ -504,6 +662,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Writes a dynamic value, with its type: `null`, booleans, numbers, strings, bytes, arrays, anonymous structures, serializable objects and enums. Throws for other values.
+	**/
 	public function addDynamic( v : Dynamic ) {
 		if( v == null ) {
 			addByte(0);
@@ -561,15 +722,24 @@ class Serializer {
 		}
 	}
 
+	/**
+		Writes a class identifier, on 2 bytes.
+	**/
 	public function addCLID( clid : Int ) {
 		out.addByte(clid >> 8);
 		out.addByte(clid & 0xFF);
 	}
 
+	/**
+		Reads a class identifier.
+	**/
 	public function getCLID() {
 		return (getByte() << 8) | getByte();
 	}
 
+	/**
+		Writes a `CustomSerializable` value (or `null`): its class name, then the data written by its `customSerialize`.
+	**/
 	public function addCustom( s : CustomSerializable ) {
 		if( s == null ) {
 			addByte(0);
@@ -583,6 +753,9 @@ class Serializer {
 		addByte(0xFF);
 	}
 
+	/**
+		Reads a `CustomSerializable` value written by `addCustom`.
+	**/
 	public function getCustom<T:CustomSerializable>() : T {
 		switch( getByte() ) {
 		case 0:
@@ -664,10 +837,16 @@ class Serializer {
 		onAddNewObject(s);
 	}
 
+	/**
+		Writes a reference to an object of any class (or `null`), and the object itself if not written yet.
+	**/
 	public function addAnyRef( s : Serializable ) {
 		addRef(s,true);
 	}
 
+	/**
+		Writes a reference to an object (or `null`) whose base class is known by the reader, and the object itself if not written yet.
+	**/
 	public function addKnownRef( s : Serializable ) {
 		addRef(s,false);
 	}
@@ -703,6 +882,9 @@ class Serializer {
 	function onAddNewObject( i : Serializable ) {
 	}
 
+	/**
+		Reads a reference written by `addAnyRef`.
+	**/
 	public function getAnyRef() : Serializable {
 		var id = getObjRef();
 		if( id == 0 ) return null;
@@ -713,6 +895,9 @@ class Serializer {
 		return makeRef(id, clidx);
 	}
 
+	/**
+		Reads a reference written by `addKnownRef`, to an object of the class `c` (of index `clidx`) or a sub class.
+	**/
 	public function getRef<T:Serializable>( c : Class<T>, clidx : Int ) : T {
 		var id = getObjRef();
 		if( id == 0 ) return null;
@@ -739,10 +924,16 @@ class Serializer {
 		return cast makeRef(id, clidx);
 	}
 
+	/**
+		Reads a reference written by `addKnownRef`, to an object of the class `c` or a sub class.
+	**/
 	public inline function getKnownRef<T:Serializable>( c : Class<T> ) : T {
 		return getRef(c, (c:Dynamic).__clid);
 	}
 
+	/**
+		Starts writing versioned data: the schemas of the classes, enums and structures used are written by `endSave`.
+	**/
 	public function beginSave() {
 		begin();
 		usedClasses = [];
@@ -750,6 +941,9 @@ class Serializer {
 		usedStructs = [];
 	}
 
+	/**
+		Returns the versioned data: the schemas, then the data written since `beginSave` (from `savePosition`).
+	**/
 	public function endSave( savePosition = 0 ) {
 		var content = end();
 		begin();
@@ -813,6 +1007,9 @@ class Serializer {
 		return end();
 	}
 
+	/**
+		Starts reading versioned data written by `endSave`: reads the schemas and prepares the conversion of the data saved with different schemas. Call `endLoad` when done.
+	**/
 	public function beginLoad( bytes : haxe.io.Bytes, position = 0 ) {
 
 		setInput(bytes, position);
@@ -908,6 +1105,9 @@ class Serializer {
 			this.mapIndexes = mapIndexes;
 	}
 
+	/**
+		Ends the reading of versioned data.
+	**/
 	public function endLoad() {
 		convert = null;
 		mapIndexes = null;
@@ -1392,6 +1592,9 @@ class Serializer {
 		}
 	}
 
+	/**
+		Returns the versioned data of the object (and of the objects it references).
+	**/
 	public static function save( value : Serializable ) {
 		var s = new Serializer();
 		s.beginSave();
@@ -1419,6 +1622,9 @@ class Serializer {
 		#end
 	}
 
+	/**
+		Reads an object of the class `cl` from versioned data written by `save`. `iterObjects` is called for each object read, by increasing UID. If `remapIds` is set, the objects get new UIDs.
+	**/
 	public static function load<T:Serializable>( bytes : haxe.io.Bytes, cl : Class<T>, ?iterObjects : Serializable -> Void, ?remapIds : Bool ) : T {
 		var s = new Serializer();
 		s.remapIds = remapIds;

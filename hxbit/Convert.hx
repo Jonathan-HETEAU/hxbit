@@ -21,15 +21,45 @@
  */
 package hxbit;
 
+/**
+	How a field is converted from the saved schema to the current one.
+**/
 class ConvertField {
+	/**
+		The path of the field (`ClassName.fieldName`), or `null` for an added field.
+	**/
 	public var path : String;
+	/**
+		The index of the field in the saved data.
+	**/
 	public var index : Int;
+	/**
+		Tells if the field has the same type in both schemas.
+	**/
 	public var same : Bool;
+	/**
+		The value of an added field, or of a changed field with a `null` value.
+	**/
 	public var defaultValue : Dynamic;
+	/**
+		The saved type, or `null` for an added field.
+	**/
 	public var from : Null<Schema.FieldType>;
+	/**
+		The current type, or `null` for a removed field.
+	**/
 	public var to : Null<Schema.FieldType>;
+	/**
+		The converter registered for the field with `Convert.registerConverter`, or `null`.
+	**/
 	public var conv : Dynamic -> Dynamic;
+	/**
+		Tells if the saved field still exists.
+	**/
 	public var written : Bool;
+	/**
+		Creates the conversion of a field.
+	**/
 	public function new(path,from, to) {
 		this.path = path;
 		this.from = from;
@@ -37,13 +67,31 @@ class ConvertField {
 	}
 }
 
+/**
+	The conversion of the data of a class saved with an older schema: removed fields are skipped, added fields get a default value, and fields whose type changed are converted (see `registerConverter`). The values of the removed fields are stored in the `oldHxBitFields` field of the object, if it has one.
+**/
 class Convert {
 
+	/**
+		The fields of the saved data, in order.
+	**/
 	public var read : Array<ConvertField>;
+	/**
+		The fields of the current schema, in order.
+	**/
 	public var write : Array<ConvertField>;
+	/**
+		Tells if the current class has serializable sub classes (a class identifier is stored).
+	**/
 	public var hasCID : Bool;
+	/**
+		Tells if the saved class had serializable sub classes.
+	**/
 	public var hadCID : Bool;
 
+	/**
+		Creates the conversion from the saved `schema` to the current schema `ourSchema` of the class.
+	**/
 	public function new( classPath : String, ourSchema : Schema, schema : Schema ) {
 		var ourMap = new Map();
 		for( i in 0...ourSchema.fieldsNames.length )
@@ -102,6 +150,9 @@ class Convert {
 		}].toString();
 	}
 
+	/**
+		Tells if two field types are compatible without conversion.
+	**/
 	public static function sameType( a : Schema.FieldType, b : Schema.FieldType ) {
 		switch( [a, b] ) {
 		case [PMap(ak, av), PMap(bk, bv)]:
@@ -132,6 +183,9 @@ class Convert {
 		}
 	}
 
+	/**
+		Returns the default value of an added field: `defValue` if not `null` (the initial value of the field), or `0`, `false`, an empty array, map or vector.
+	**/
 	public static function getDefault(t:Schema.FieldType, defValue:Dynamic) : Dynamic {
 		return switch( t ) {
 		case PInt64: defValue ?? haxe.Int64.make(0, 0);
@@ -152,19 +206,40 @@ class Convert {
 	}
 
 	static var convFuns : Map<String,Dynamic -> Dynamic> = new Map();
+	/**
+		Registers a function converting the saved value of the field `path` (`ClassName.fieldName`) when its type changed.
+	**/
 	public static function registerConverter( path : String, f : Dynamic -> Dynamic ) {
 		convFuns.set(path, f);
 	}
 
 }
 
+/**
+	The conversion of the values of an enum or a structure saved with an older schema.
+**/
 class TypeConvert {
 
+	/**
+		The enum or class of the values.
+	**/
 	public var classValue : Dynamic;
+	/**
+		The conversion of each saved constructor or field (`null` when unchanged).
+	**/
 	public var constructs : Array<Convert>;
+	/**
+		The current index of each saved constructor or field (`-1` if removed).
+	**/
 	public var reindex : Array<Int>;
+	/**
+		Tells if the values are structures.
+	**/
 	public var isStruct : Bool;
 
+	/**
+		Creates the conversion from the saved `schema` to the current schema `ourSchema`.
+	**/
 	public function new( classPath : String, classValue : Dynamic, ourSchema : Schema, schema : Schema, isStruct ) {
 		this.isStruct = isStruct;
 		this.classValue = classValue;

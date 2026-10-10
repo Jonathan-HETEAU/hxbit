@@ -21,16 +21,37 @@
  */
 package hxbit;
 
+/**
+	The type of a serialized field, as stored in a `Schema`.
+**/
 typedef FieldType = Macros.PropTypeDesc<FieldType>;
 
 #if !macro
+/**
+	The description of the serialized fields of a class, an enum or a structure: stored with the data by `Serializer.endSave`, and compared with the current schema by `Serializer.beginLoad` to convert data saved with older versions.
+**/
 class Schema implements Serializable {
 
+	/**
+		The CRC32 of the serialized schema, to compare schemas.
+	**/
 	public var checkSum(get, never) : Int;
+	/**
+		Tells if the class has no serializable sub class (its objects are serialized without class identifier).
+	**/
 	@:s public var isFinal : Bool;
+	/**
+		The names of the serialized fields, in serialization order.
+	**/
 	@:s @:notMutable public var fieldsNames : Array<String>;
+	/**
+		The types of the serialized fields.
+	**/
 	@:s @:notMutable public var fieldsTypes : Array<FieldType>;
 
+	/**
+		Creates an empty schema.
+	**/
 	public function new() {
 		fieldsNames = [];
 		fieldsTypes = [];
