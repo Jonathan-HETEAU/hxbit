@@ -1,0 +1,731 @@
+{
+ "modules": {
+  "hxbit.ArrayProxy": {
+   "file": "hxbit/ArrayProxy.hx",
+   "package": "hxbit",
+   "lines": 538,
+   "doc_blocks": 60,
+   "types": [
+    "class ArrayProxyData",
+    "class ArrayProxyIterator",
+    "abstract ArrayProxy",
+    "abstract ArrayProxy2"
+   ],
+   "heritage": [
+    [
+     "ArrayProxyData",
+     "extends",
+     "BaseProxy"
+    ]
+   ],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "extends",
+     "import",
+     "use"
+    ]
+   },
+   "used_by": []
+  },
+  "hxbit.Closure": {
+   "file": "hxbit/Closure.hx",
+   "package": "hxbit",
+   "lines": 228,
+   "doc_blocks": 3,
+   "types": [
+    "class Closure"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ]
+   },
+   "used_by": []
+  },
+  "hxbit.Convert": {
+   "file": "hxbit/Convert.hx",
+   "package": "hxbit",
+   "lines": 292,
+   "doc_blocks": 25,
+   "types": [
+    "class ConvertField",
+    "class Convert",
+    "class TypeConvert"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Serializer"
+   ]
+  },
+  "hxbit.CustomSerializable": {
+   "file": "hxbit/CustomSerializable.hx",
+   "package": "hxbit",
+   "lines": 11,
+   "doc_blocks": 1,
+   "types": [
+    "interface CustomSerializable"
+   ],
+   "heritage": [
+    [
+     "CustomSerializable",
+     "extends",
+     "Serializable.AnySerializable"
+    ]
+   ],
+   "deps": {
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Serializer"
+   ]
+  },
+  "hxbit.Double": {
+   "file": "hxbit/Double.hx",
+   "package": "hxbit",
+   "lines": 28,
+   "doc_blocks": 1,
+   "types": [
+    "abstract Double"
+   ],
+   "heritage": [],
+   "deps": {},
+   "used_by": []
+  },
+  "hxbit.Dump": {
+   "file": "hxbit/Dump.hx",
+   "package": "hxbit",
+   "lines": 168,
+   "doc_blocks": 4,
+   "types": [
+    "class Dump"
+   ],
+   "heritage": [
+    [
+     "Dump",
+     "extends",
+     "Serializer"
+    ]
+   ],
+   "deps": {
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "extends",
+     "use"
+    ]
+   },
+   "used_by": []
+  },
+  "hxbit.EnumFlagsProxy": {
+   "file": "hxbit/EnumFlagsProxy.hx",
+   "package": "hxbit",
+   "lines": 100,
+   "doc_blocks": 11,
+   "types": [
+    "class EnumFlagsData",
+    "abstract EnumFlagsProxy"
+   ],
+   "heritage": [
+    [
+     "EnumFlagsData",
+     "extends",
+     "NetworkSerializable.BaseProxy"
+    ]
+   ],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros"
+   ]
+  },
+  "hxbit.Macros": {
+   "file": "hxbit/Macros.hx",
+   "package": "hxbit",
+   "lines": 3360,
+   "doc_blocks": 64,
+   "types": [
+    "enum RpcMode",
+    "enum PropTypeDesc",
+    "typedef PropType",
+    "enum Condition",
+    "class Macros"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.EnumFlagsProxy": [
+     "use"
+    ],
+    "hxbit.NetworkHost": [
+     "use"
+    ],
+    "hxbit.NetworkSerializable": [
+     "use"
+    ],
+    "hxbit.Proxy": [
+     "use"
+    ],
+    "hxbit.ReadOnly": [
+     "use"
+    ],
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ],
+    "hxbit.StructSerializable": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ],
+    "hxbit.VisibilityGroup": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Closure",
+    "hxbit.NetworkSerializable",
+    "hxbit.Proxy",
+    "hxbit.ReadOnly",
+    "hxbit.Schema",
+    "hxbit.Serializable",
+    "hxbit.StructSerializable",
+    "hxbit.VisibilityGroup"
+   ]
+  },
+  "hxbit.MapProxy": {
+   "file": "hxbit/MapProxy.hx",
+   "package": "hxbit",
+   "lines": 256,
+   "doc_blocks": 26,
+   "types": [
+    "class MapData",
+    "abstract MapProxy",
+    "abstract MapProxy2"
+   ],
+   "heritage": [
+    [
+     "MapData",
+     "extends",
+     "BaseProxy"
+    ]
+   ],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "extends",
+     "import",
+     "use"
+    ]
+   },
+   "used_by": []
+  },
+  "hxbit.NetworkHost": {
+   "file": "hxbit/NetworkHost.hx",
+   "package": "hxbit",
+   "lines": 1613,
+   "doc_blocks": 57,
+   "types": [
+    "class NetworkClient",
+    "class NetworkHost"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "import",
+     "use"
+    ],
+    "hxbit.NetworkStats": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros",
+    "hxbit.NetworkSerializable",
+    "hxbit.Weak"
+   ]
+  },
+  "hxbit.NetworkSerializable": {
+   "file": "hxbit/NetworkSerializable.hx",
+   "package": "hxbit",
+   "lines": 406,
+   "doc_blocks": 54,
+   "types": [
+    "interface ProxyHost",
+    "interface ProxyChild",
+    "interface NetworkNoReplication",
+    "enum_abstract Operation",
+    "interface NetworkSerializable",
+    "class BaseProxy",
+    "abstract NetworkProperty",
+    "class NetworkSerializer"
+   ],
+   "heritage": [
+    [
+     "NetworkSerializable",
+     "extends",
+     "Serializable"
+    ],
+    [
+     "NetworkSerializable",
+     "extends",
+     "ProxyHost"
+    ],
+    [
+     "BaseProxy",
+     "implements",
+     "ProxyHost"
+    ],
+    [
+     "BaseProxy",
+     "implements",
+     "ProxyChild"
+    ],
+    [
+     "NetworkSerializer",
+     "extends",
+     "Serializer"
+    ]
+   ],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ],
+    "hxbit.NetworkHost": [
+     "use"
+    ],
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "extends",
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "extends",
+     "use"
+    ],
+    "hxbit.VisibilityGroup": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.ArrayProxy",
+    "hxbit.EnumFlagsProxy",
+    "hxbit.Macros",
+    "hxbit.MapProxy",
+    "hxbit.NetworkHost",
+    "hxbit.NetworkStats",
+    "hxbit.Serializable",
+    "hxbit.Serializer",
+    "hxbit.VectorProxy",
+    "hxbit.Weak"
+   ]
+  },
+  "hxbit.NetworkStats": {
+   "file": "hxbit/NetworkStats.hx",
+   "package": "hxbit",
+   "lines": 332,
+   "doc_blocks": 20,
+   "types": [
+    "typedef StatClass",
+    "typedef Stat",
+    "enum EmptyEnum",
+    "class NetworkStats"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "use"
+    ],
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ],
+    "hxbit.StructSerializable": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.NetworkHost"
+   ]
+  },
+  "hxbit.Proxy": {
+   "file": "hxbit/Proxy.hx",
+   "package": "hxbit",
+   "lines": 30,
+   "doc_blocks": 1,
+   "types": [
+    "class Proxy"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros"
+   ]
+  },
+  "hxbit.ReadOnly": {
+   "file": "hxbit/ReadOnly.hx",
+   "package": "hxbit",
+   "lines": 49,
+   "doc_blocks": 4,
+   "types": [
+    "class ReadOnly",
+    "typedef ReadOnlyArray",
+    "abstract ReadOnlyVector",
+    "abstract ReadOnlyMap"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros"
+   ]
+  },
+  "hxbit.Schema": {
+   "file": "hxbit/Schema.hx",
+   "package": "hxbit",
+   "lines": 73,
+   "doc_blocks": 7,
+   "types": [
+    "typedef FieldType",
+    "class Schema"
+   ],
+   "heritage": [
+    [
+     "Schema",
+     "implements",
+     "Serializable"
+    ]
+   ],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "implements",
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Convert",
+    "hxbit.Dump",
+    "hxbit.Macros",
+    "hxbit.NetworkSerializable",
+    "hxbit.NetworkStats",
+    "hxbit.Serializable",
+    "hxbit.Serializer"
+   ]
+  },
+  "hxbit.Serializable": {
+   "file": "hxbit/Serializable.hx",
+   "package": "hxbit",
+   "lines": 122,
+   "doc_blocks": 19,
+   "types": [
+    "abstract MarkInfo",
+    "abstract MarkParam",
+    "interface AnySerializable",
+    "interface Serializable",
+    "class SerializableEnum"
+   ],
+   "heritage": [
+    [
+     "Serializable",
+     "extends",
+     "AnySerializable"
+    ]
+   ],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ],
+    "hxbit.NetworkSerializable": [
+     "use"
+    ],
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializer": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Closure",
+    "hxbit.Convert",
+    "hxbit.CustomSerializable",
+    "hxbit.Dump",
+    "hxbit.Macros",
+    "hxbit.NetworkHost",
+    "hxbit.NetworkSerializable",
+    "hxbit.NetworkStats",
+    "hxbit.Schema",
+    "hxbit.Serializer",
+    "hxbit.StructSerializable"
+   ]
+  },
+  "hxbit.Serializer": {
+   "file": "hxbit/Serializer.hx",
+   "package": "hxbit",
+   "lines": 1716,
+   "doc_blocks": 67,
+   "types": [
+    "class NativeKeyValueIterator",
+    "abstract UIDMap",
+    "typedef UIDMap",
+    "class Serializer"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Convert": [
+     "use"
+    ],
+    "hxbit.CustomSerializable": [
+     "use"
+    ],
+    "hxbit.NetworkSerializable": [
+     "use"
+    ],
+    "hxbit.Schema": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ],
+    "hxbit.StructSerializable": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.CustomSerializable",
+    "hxbit.Dump",
+    "hxbit.Macros",
+    "hxbit.NetworkHost",
+    "hxbit.NetworkSerializable",
+    "hxbit.NetworkStats",
+    "hxbit.Schema",
+    "hxbit.Serializable"
+   ]
+  },
+  "hxbit.StructSerializable": {
+   "file": "hxbit/StructSerializable.hx",
+   "package": "hxbit",
+   "lines": 37,
+   "doc_blocks": 1,
+   "types": [
+    "interface StructSerializable"
+   ],
+   "heritage": [
+    [
+     "StructSerializable",
+     "extends",
+     "Serializable.AnySerializable"
+    ]
+   ],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ],
+    "hxbit.Serializable": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros",
+    "hxbit.NetworkStats",
+    "hxbit.Serializer"
+   ]
+  },
+  "hxbit.UID": {
+   "file": "hxbit/UID.hx",
+   "package": "hxbit",
+   "lines": 28,
+   "doc_blocks": 1,
+   "types": [
+    "typedef UID"
+   ],
+   "heritage": [],
+   "deps": {},
+   "used_by": [
+    "hxbit.Macros",
+    "hxbit.NetworkHost",
+    "hxbit.NetworkStats",
+    "hxbit.Serializable",
+    "hxbit.Serializer",
+    "hxbit.Weak"
+   ]
+  },
+  "hxbit.VectorProxy": {
+   "file": "hxbit/VectorProxy.hx",
+   "package": "hxbit",
+   "lines": 115,
+   "doc_blocks": 9,
+   "types": [
+    "class VectorProxyData",
+    "abstract VectorProxy"
+   ],
+   "heritage": [
+    [
+     "VectorProxyData",
+     "extends",
+     "BaseProxy"
+    ]
+   ],
+   "deps": {
+    "hxbit.NetworkSerializable": [
+     "extends",
+     "import",
+     "use"
+    ]
+   },
+   "used_by": []
+  },
+  "hxbit.VisibilityGroup": {
+   "file": "hxbit/VisibilityGroup.hx",
+   "package": "hxbit",
+   "lines": 14,
+   "doc_blocks": 2,
+   "types": [
+    "typedef VisibilityGroup",
+    "enum VisibilityGroup"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.Macros": [
+     "use"
+    ]
+   },
+   "used_by": [
+    "hxbit.Macros",
+    "hxbit.NetworkSerializable"
+   ]
+  },
+  "hxbit.Weak": {
+   "file": "hxbit/Weak.hx",
+   "package": "hxbit",
+   "lines": 34,
+   "doc_blocks": 2,
+   "types": [
+    "abstract Weak"
+   ],
+   "heritage": [],
+   "deps": {
+    "hxbit.NetworkHost": [
+     "use"
+    ],
+    "hxbit.NetworkSerializable": [
+     "use"
+    ],
+    "hxbit.UID": [
+     "use"
+    ]
+   },
+   "used_by": []
+  }
+ },
+ "doc_order": [
+  [
+   "hxbit.UID"
+  ],
+  [
+   "hxbit.Convert",
+   "hxbit.CustomSerializable",
+   "hxbit.EnumFlagsProxy",
+   "hxbit.Macros",
+   "hxbit.NetworkHost",
+   "hxbit.NetworkSerializable",
+   "hxbit.NetworkStats",
+   "hxbit.Proxy",
+   "hxbit.ReadOnly",
+   "hxbit.Schema",
+   "hxbit.Serializable",
+   "hxbit.Serializer",
+   "hxbit.StructSerializable",
+   "hxbit.VisibilityGroup"
+  ],
+  [
+   "hxbit.ArrayProxy"
+  ],
+  [
+   "hxbit.Closure"
+  ],
+  [
+   "hxbit.Double"
+  ],
+  [
+   "hxbit.Dump"
+  ],
+  [
+   "hxbit.MapProxy"
+  ],
+  [
+   "hxbit.VectorProxy"
+  ],
+  [
+   "hxbit.Weak"
+  ]
+ ],
+ "package_edges": {
+  "hxbit": {}
+ }
+}

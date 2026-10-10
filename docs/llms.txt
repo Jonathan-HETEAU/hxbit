@@ -1,0 +1,62 @@
+# HxBit
+
+> HxBit is a binary serialization and network synchronization library for Haxe: classes implementing `hxbit.Serializable` get macro-generated, strictly typed serialization code; `hxbit.NetworkSerializable` objects are replicated by a `hxbit.NetworkHost` (property sync and RPCs). The README explains the concepts: [README.md](../README.md).
+
+Each link points to a Markdown page with the full public API of a type: signatures, documentation, inheritance and platform availability. File dependency map: [deps/DEPENDENCIES.md](deps/DEPENDENCIES.md).
+
+## hxbit
+
+- [hxbit.AnySerializable](api/md/hxbit/AnySerializable.md): A value serialized by a `Serializer`: a `Serializable` object, or a `StructSerializable` structure.
+- [hxbit.ArrayProxy](api/md/hxbit/ArrayProxy.md): The proxy of an `Array` stored in a property of a `NetworkSerializable`: the functions modifying the array mark the property as changed, which sends the whole array again.
+- [hxbit.ArrayProxy2](api/md/hxbit/ArrayProxy2.md): The proxy of an `Array` of proxies (an array of mutable values): like `ArrayProxy`, and the values are bound to the array, so that their changes mark the property as changed.
+- [hxbit.ArrayProxyData](api/md/hxbit/ArrayProxyData.md): The data of an `ArrayProxy`: the wrapped array, and the property of the host it is bound to.
+- [hxbit.ArrayProxyIterator](api/md/hxbit/ArrayProxyIterator.md): An iterator over the values of an array.
+- [hxbit.BaseProxy](api/md/hxbit/BaseProxy.md): The base class of the generated proxies.
+- [hxbit.Closure](api/md/hxbit/Closure.md): A serializable function, returning `T`: create it with `Closure.make(function() ...)`.
+- [hxbit.Convert](api/md/hxbit/Convert.md): The conversion of the data of a class saved with an older schema: removed fields are skipped, added fields get a default value, and fields whose type changed are converted (see `registerConverter`).
+- [hxbit.ConvertField](api/md/hxbit/ConvertField.md): How a field is converted from the saved schema to the current one.
+- [hxbit.CustomSerializable](api/md/hxbit/CustomSerializable.md): Custom serializable are more lightweight (no versioning etc.) than normal Serializable but a bit larger when serializing.
+- [hxbit.Double](api/md/hxbit/Double.md): A Float that is serialized with full 64 bits precision (instead of 32 bits for Float).
+- [hxbit.Dump](api/md/hxbit/Dump.md): Converts versioned data (written by `Serializer.endSave`) to a structure that can be saved as JSON, for debugging.
+- [hxbit.EnumFlagsData](api/md/hxbit/EnumFlagsData.md): The data of an `EnumFlagsProxy`: the wrapped flags, and the property of the host it is bound to.
+- [hxbit.EnumFlagsProxy](api/md/hxbit/EnumFlagsProxy.md): The proxy of `haxe.EnumFlags` stored in a property of a `NetworkSerializable`: setting or unsetting a flag marks the property as changed.
+- [hxbit.FieldType](api/md/hxbit/FieldType.md): The type of a serialized field, as stored in a `Schema`.
+- [hxbit.Macros](api/md/hxbit/Macros.md): The macros generating the serialization and network code of `Serializable`, `StructSerializable` and `NetworkSerializable` classes, and helpers called by the generated code.
+- [hxbit.MapData](api/md/hxbit/MapData.md): The data of a `MapProxy`: the wrapped map, and the property of the host it is bound to.
+- [hxbit.MapProxy](api/md/hxbit/MapProxy.md): The proxy of a `Map` stored in a property of a `NetworkSerializable`: the functions modifying the map mark the property as changed, which sends the whole map again.
+- [hxbit.MapProxy2](api/md/hxbit/MapProxy2.md): The proxy of a `Map` of proxies (a map of mutable values): like `MapProxy`, and the values are bound to the map, so that their changes mark the property as changed.
+- [hxbit.MarkInfo](api/md/hxbit/MarkInfo.md): The marking parameters of `AnySerializable.markReferences`: `set` is the bits set on the marked objects (`__mark`), `mask` the bits kept.
+- [hxbit.MarkParam](api/md/hxbit/MarkParam.md): The visibility groups of the objects, by UID, used when marking the references visible from a client (`null` for all the references).
+- [hxbit.NetworkClient](api/md/hxbit/NetworkClient.md): A connection of a `NetworkHost`: on the server (authority), one for each connected client; on a client, the connection to the server.
+- [hxbit.NetworkHost](api/md/hxbit/NetworkHost.md): Replicates `NetworkSerializable` objects between a server (the authority, `isAuth`) and its clients: sends the changed properties, the registered and unregistered objects and the RPCs.
+- [hxbit.NetworkNoReplication](api/md/hxbit/NetworkNoReplication.md): Classes implementing this will not be replicated over the network
+- [hxbit.NetworkProperty](api/md/hxbit/NetworkProperty.md): A property of a `NetworkSerializable`, as the `networkProp<Name>` constants: they can be combined with `|`.
+- [hxbit.NetworkSerializable](api/md/hxbit/NetworkSerializable.md): A `Serializable` object that can be replicated over the network by a `NetworkHost`: its `@:s` fields are synchronized from the authority to the clients, and its `@:rpc` methods are remote procedure calls (see the READ...
+- [hxbit.NetworkSerializer](api/md/hxbit/NetworkSerializer.md): The `Serializer` of a `NetworkHost` and of its clients: it writes the `@:noSave` fields (`forSave` is `false`), shares the objects with `enableAutoReplication` when they are sent, and checks that the referenced object...
+- [hxbit.NetworkStats](api/md/hxbit/NetworkStats.md): Collects the number of times each property and RPC is sent and the number of bytes used, by class (see `NetworkHost.setStats`).
+- [hxbit.Operation](api/md/hxbit/Operation.md): The operations a client can be allowed to do on an object, checked with `NetworkSerializable.networkAllow`.
+- [hxbit.PropType](api/md/hxbit/PropType.md): A serialized type, with the options given by the field metadata.
+- [hxbit.PropTypeDesc](api/md/hxbit/PropTypeDesc.md): The type of a serialized value, as used by the macros and stored in the schemas (see `Schema.FieldType`).
+- [hxbit.Proxy](api/md/hxbit/Proxy.md): The proxy type generated for the mutable type `T` (`Array`, `Map`, `haxe.ds.Vector`, structure): wraps a value to mark the network property changed when the value is modified (see `ArrayProxy`, `MapProxy`, `VectorProx...
+- [hxbit.ProxyChild](api/md/hxbit/ProxyChild.md): A proxy, wrapping a mutable value stored in a property of a `ProxyHost`.
+- [hxbit.ProxyHost](api/md/hxbit/ProxyHost.md): An object notified when a value it contains is modified: a `NetworkSerializable`, or a proxy containing other proxies.
+- [hxbit.ReadOnly](api/md/hxbit/ReadOnly.md): The read-only version of the type `T`, generated by a macro: arrays, maps, vectors and structures are replaced by read-only types, recursively.
+- [hxbit.ReadOnlyArray](api/md/hxbit/ReadOnlyArray.md): A read-only array.
+- [hxbit.ReadOnlyMap](api/md/hxbit/ReadOnlyMap.md): A read-only `Map`.
+- [hxbit.ReadOnlyVector](api/md/hxbit/ReadOnlyVector.md): A read-only `haxe.ds.Vector`.
+- [hxbit.RpcMode](api/md/hxbit/RpcMode.md): The modes of the `@:rpc(mode)` methods of a `NetworkSerializable`.
+- [hxbit.Schema](api/md/hxbit/Schema.md): The description of the serialized fields of a class, an enum or a structure: stored with the data by `Serializer.endSave`, and compared with the current schema by `Serializer.beginLoad` to convert data saved with olde...
+- [hxbit.Serializable](api/md/hxbit/Serializable.md): An object serialized by a `Serializer`: its fields marked with `@:s` are serialized, by code generated at compile time (`hxbit.Macros.buildSerializable`).
+- [hxbit.SerializableEnum](api/md/hxbit/SerializableEnum.md): The serializer generated for the enum `T` (in the `hxbit.enumSer` package), with static methods to serialize, unserialize and get the schema of its values.
+- [hxbit.Serializer](api/md/hxbit/Serializer.md): Reads and writes the binary data of `Serializable` objects and of the basic values.
+- [hxbit.Stat](api/md/hxbit/Stat.md): The statistics of a property or of a RPC.
+- [hxbit.StatClass](api/md/hxbit/StatClass.md): The statistics of a class.
+- [hxbit.StructSerializable](api/md/hxbit/StructSerializable.md): StructSerializable is a slighlty more compact version of Serializable, but doesn't have a unique id so it shouldn't be referenced multiple times.
+- [hxbit.TypeConvert](api/md/hxbit/TypeConvert.md): The conversion of the values of an enum or a structure saved with an older schema.
+- [hxbit.UID](api/md/hxbit/UID.md): The unique identifier of a `Serializable` object: an `Int`, or an `haxe.Int64` with `-D hxbit64`.
+- [hxbit.UIDMap](api/md/hxbit/UIDMap.md): A map of values by object UID.
+- [hxbit.VectorProxy](api/md/hxbit/VectorProxy.md): The proxy of a `haxe.ds.Vector` stored in a property of a `NetworkSerializable`: setting a value or sorting marks the property as changed, which sends the whole vector again.
+- [hxbit.VectorProxyData](api/md/hxbit/VectorProxyData.md): The data of a `VectorProxy`: the wrapped vector, and the property of the host it is bound to.
+- [hxbit.VisibilityGroup](api/md/hxbit/VisibilityGroup.md): The visibility groups of the `@:visible(group)` fields, set with `hxbit.Macros.initVisibility` (with `-D hxbit_visibility`).
+- [hxbit.VisibilityGroupDef](api/md/hxbit/VisibilityGroupDef.md): The visibility groups set with `hxbit.Macros.initVisibility`.
+- [hxbit.Weak](api/md/hxbit/Weak.md): A weak reference to a `NetworkSerializable` object: stores its UID only, and resolves it from the current `NetworkHost`.
