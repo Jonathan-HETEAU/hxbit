@@ -98,6 +98,8 @@ class User implements hxbit.Serializable {
 If you want to serialize unsupported types, you could implement your own serialization through the optional methods `customSerialize` and `customUnserialize`.
 
 ```haxe
+import js.lib.Float32Array; // a JavaScript typed array
+
 class Float32ArrayContainer implements hxbit.Serializable {
 
     public var value:Float32Array;
@@ -198,11 +200,11 @@ Return values are possible unless you are in `all` mode, and will add an extra c
 
 ```haxe
    @:rpc(server) public function sendAction( act : String ) : Bool {
+      return act == "test";
    }
-   
+
    ...
-   sendAction("test", function(onResult) { ... });
-   
+   sendAction("test", function(result) trace(result));
 ```
 
 RPC executing on the client can change network properties on the current object without triggering errors or network data
