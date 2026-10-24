@@ -247,7 +247,7 @@ You can also cancel the change of a property can calling `networkCancelProperty(
 
 ### Save and load
 
-The whole set of currently shared network objects can be saved using host.saveState() and loaded using host.loadState(bytes). It uses the versionning decribed previously. Once loaded, call host.makeAlive() to make sure all alive() calls are made to object.
+The whole set of currently shared network objects can be saved using host.saveState() and loaded using host.loadSave(bytes). It uses the versionning decribed previously. Once loaded, call host.makeAlive() to make sure all alive() calls are made to object.
 
 
 ### Checked RPCs and @:do blocks
